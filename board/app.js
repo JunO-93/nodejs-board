@@ -17,8 +17,17 @@ app.engine("handlebars", handlebars.create({ //핸들바 생성 및 엔진 반�
 app.set("view engine", "handlebars");
 app.set("views", __dirname + "/views"); //뷰디렉터리 설정
 
-app.get("/", (req, res) => {
-    res.render("home", { title: "테스트게시판", message: "express로 만든 게시판"});    
+//메인화면 리스트페이지
+app.get("/", async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const search = req.query.search || "";
+    try{
+        const [posts, paginator] = await postService.list(collection, page, search);        
+        res.render("home", { title: "테스트게시판", search, paginator, posts}); 
+    } catch (error) {
+        console.error(error);
+        res.render("home", {title: "테스트 게시판"});
+    }       
 });
 
 //글쓰기
