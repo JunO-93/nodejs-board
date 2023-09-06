@@ -30,15 +30,39 @@ app.get("/", async (req, res) => {
     }       
 });
 
-//글쓰기
+//글쓰기 페이지 이동, mode는 create
 app.get("/write", (req, res) => {
-    res.render("write", { title: "테스트 게시판" });
+    res.render("write", { title: "테스트 게시판", mode: "create"});
 });
 app.post("/write", async (req, res) => {
     const post = req.body;
     const result = await postService.writePost(collection, post); //글쓰기 후 결과 DB 반환
     res.redirect(`/detail/${result.insertedId}`); //생성된 도큐먼트의 _id를 사용해 상세페이지로 이동
 })
+// 수정 페이지로 이동 mode는 modify
+app.get("/modify/:id", async (req, res) => {
+    const { id } = req.params.id;
+    //getPostById() 함수로 게시글 데이터를 받아옴
+    const post = await postService.getPostById(collection, req.params.id);
+    console.log(post);
+    res.render("write", { title: "테스트 게시판 ", mode: "modify", post});
+});
+
+//게시글 수정 API
+app.post("/modify", async (req, res) => {
+    const { id, title, writer, password, content } = req.body;
+
+    const post = {
+        title,
+        writer,
+        password,
+        content,
+        createDt: new Date().toISOString(),
+    };
+    //업데이트결과
+    const result = postService.updatePost(collection, id, post);
+    res.redirect(`/detail/${id}`);
+});
 
 //상세페이지 이동
 app.get("/detail/:id", async(req, res) => {
