@@ -39,8 +39,29 @@ async function getDetailPost(collection, id){
     return await collection.findOneAndUpdate({_id: ObjectId(id)}, {$inc: {hits:1}});
 }
 
+async function getPostByIdAndPassword(collection, {id, password}) {
+    // findOne() 함수사용
+    return await collection.findOne({_id: ObjectId(id), password: password}, projectionOption );
+}
+
+async function getPostById(collection, id) {
+    return await collection.findOne({_id: ObjectId(id)}, projectionOption);
+}
+
+async function updatePost(collection, id, post) {
+    const toUpdatePost = {
+        $set: {
+            ...post,
+        },
+    };
+    return await collection.updateOne({_id: ObjectId(id)}, toUpdatePost);
+}
+
 module.exports = { //require()로 파일을 임포트 시 외부로 노출하는 객체
     list,
     writePost,
     getDetailPost,
+    getPostByIdAndPassword,
+    getPostById,
+    updatePost,
 };

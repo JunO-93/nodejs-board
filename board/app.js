@@ -50,6 +50,22 @@ app.get("/detail/:id", async(req, res) => {
     });
 });
 
+//패스워드 체크
+app.post("/check-password", async (req, res) => {
+    //id, passwor값 가져옴
+    const {id, password} = req.body;
+
+    //postService의 getPostByIdAndPassword() 함수를 사용해 게시글 데이터를 확인
+    const post = await postService.getPostByIdAndPassword(collection, {id, password});
+
+    //데이터가 있으면 isExist true, 없으면 isExist false
+    if (!post) {
+        return res.status(404).json({ isExist:false });
+    } else {
+        return res.json({ isExist:true });
+    }
+});
+
 //db connect
 let collection;
 app.listen(3000, async () => {
