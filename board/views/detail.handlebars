@@ -1,16 +1,17 @@
 <h1>{{title}}</h1>
-<h2 class="text-xl">제목입니다.</h2>
+{{#with post}} {{!-- post 객체를 쉽게 사용하도록 with로 감싸기 --}}
+<h2 class="text-xl">{{title}}</h2>
 <div>
-    작성자 : <b>작성자 이름</b>
+    작성자 : <b>{{writer}}</b>
 </div>
 <div>
-    조회수 : 9999 | 작성일시 : 2023-01-01 00:00:00
+    조회수 : {{hits}} | 작성일시 : {{dateString createdDt}}
     <button onclick="modifyPost()">수정</button>
     <button onclick="deletePost()">삭제</button>
 </div>
 
 <div>
-    <pre>본문입니다. 하이호이</pre>
+    <pre>{{content}}</pre> {{!-- 본문내용 --}}
 </div>
 
 <section>
@@ -48,9 +49,41 @@
         <pre>{{comment}}</pre>
     </div>
 </section>
+{{/with}}
 
 <footer>
     <div>
         <a href="/">목록으로</a>
     </div>
 </footer>
+<script>
+    const postOption = {
+        method: 'POST' ,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    }
+    async function modifyPost() {
+        const password = prompt("패스워드를 입력해주세요");
+        if(!password) { // 프롬프트에서 취소를 누른경우 처리
+            return;
+        }
+
+        //check-password API 실행
+        const result = await fetch("/check-password", {
+            ...postOption,
+            body: JSON.stringify({ id: "{{post._id}}", password})
+        });
+
+        //json 함수를 실행하는 경우도 await해줘야함
+        const data = await result.json();
+
+        //패스워드가 맞는 경우 수정 페이지로 이동
+        if (data.isExist) {
+            document.location = "/modify/{{post._id}}"
+        } else {
+            alert("패스워드가 올바르지 않습니다.");
+        }
+    }
+    async function deletePost() {  }
+</script>
