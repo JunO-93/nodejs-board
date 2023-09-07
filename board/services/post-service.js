@@ -57,6 +57,18 @@ async function updatePost(collection, id, post) {
     return await collection.updateOne({_id: ObjectId(id)}, toUpdatePost);
 }
 
+async function deletePost(collection, id, password) {
+
+    const result = await collection.deleteOne({ _id: ObjectId(id), password: password});
+
+    if (result.deletedCount !==1) {
+        console.log("삭제 실패");
+        return false;
+    }
+    console.log("삭제 성공");
+    return true;
+}
+
 module.exports = { //require()로 파일을 임포트 시 외부로 노출하는 객체
     list,
     writePost,
@@ -64,4 +76,5 @@ module.exports = { //require()로 파일을 임포트 시 외부로 노출하는
     getPostByIdAndPassword,
     getPostById,
     updatePost,
+    deletePost,
 };

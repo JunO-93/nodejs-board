@@ -4,7 +4,6 @@ const postService = require("./services/post-service"); // service file loading
 const handlebars = require("express-handlebars");
 const app = express();
 const mongodbConnection = require("./configs/mongodb-connection");
-const { ObjectId } = require("mongodb");
 
 // req.body와 POST 요청을 해석하기 위한 설정
 app.use(express.json());
@@ -71,15 +70,8 @@ app.delete("/delete", async (req, res) => {
     const { id, password } = req.body;
     try {
         //collection의 deleteONe을 사용해 게시글 하나를 삭제
-        const result = await collection.deleteOne({ _id: ObjectId(id), password: password});
-
-        // 삭제결과가 잘못된 경우의 처리
-        if (result.deletedCount !==1) {
-            console.log("삭제 실패");
-            return res.json({ isSuccess: false});
-        }
-        console.log("삭제 성공");
-        return res.json({ isSuccess: true});
+        const isSuccess = postService.deletePost(collection, id, password);
+        return res.json({ isSuccess: isSuccess});
 
     } catch (err) { //DB 연결이 안되거나 네트워크 연결 불안정일때 처리
         console.error(err);
