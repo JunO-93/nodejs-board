@@ -4,6 +4,7 @@ const postService = require("./services/post-service"); // service file loading
 const handlebars = require("express-handlebars");
 const app = express();
 const mongodbConnection = require("./configs/mongodb-connection");
+const { ObjectId } = require("mongodb");
 
 // req.body와 POST 요청을 해석하기 위한 설정
 app.use(express.json());
@@ -38,12 +39,12 @@ app.post("/write", async (req, res) => {
     const post = req.body;
     const result = await postService.writePost(collection, post); //글쓰기 후 결과 DB 반환
     res.redirect(`/detail/${result.insertedId}`); //생성된 도큐먼트의 _id를 사용해 상세페이지로 이동
-})
+});
 // 수정 페이지로 이동 mode는 modify
 app.get("/modify/:id", async (req, res) => {
     const { id } = req.params.id;
     //getPostById() 함수로 게시글 데이터를 받아옴
-    const post = await postService.getPostById(collection, req.params.id);
+    const post = await postService.getPostById(collection, id);
     console.log(post);
     res.render("write", { title: "테스트 게시판 ", mode: "modify", post});
 });
@@ -77,6 +78,61 @@ app.delete("/delete", async (req, res) => {
         console.error(err);
         return res.json({ isSuccess: false });
     }
+});
+
+//댓글쓰기 API
+app.post("/write-comment", async (req, res) => {
+    const { id, name, password, comment } = req.body; // body로 데이터 가져오기
+    const post = await postService.getPostById(collection, id); //id로 게시글 정보 가져오기
+
+    //게시글에 기존 댓글 리스트가 있으면 추가
+    if (post.comments) {
+        post.comments.push({
+            idx: post.comments.length + 1,
+            name,
+            password,
+            comment,
+            createdDt: new Date().toISOString(),
+        });
+    } else {
+        //게시글에 댓글정보가 없으면 리스트에 댓글 정보 추가
+        post.comments = [
+            {
+                idx: 1,
+                name,
+                password,
+                comment,
+                createdDt: new Date().toISOString(),
+            },
+        ];
+    }
+
+    //업데이트하기. 업데이트 후에는 상세페이지로 다시 리다이렉트
+    postService.updatePost(collection, id, post);
+    return res.redirect(`/detail/${id}`);
+});
+
+// 댓글삭제 API
+app.delete("/delete-comment", async(req, res) => {
+    const { id, idx, password } = req.body;
+    //게시글의 comments 안에 있는 특정 댓글 데이터를 찾기
+    const post = await collection.findOne(
+        {
+            _id: ObjectId(id),
+            comments: { $elemMatch: { idx: parseInt(idx), password}},
+        },
+        postService.projectionOption, 
+    );
+    
+    //데이터가 없으면 isSuccess : false를 주면서 종료
+    if(!post) {
+        return res.json({ isSuccess: false});
+    }
+
+    //댓글번호가 idx 이외인 것만 comments에 다시 저장 후 저장
+    post.comments = post.comments.filter((comment) => comment.idx != idx);
+    postService.updatePost(collection, id, post);
+    return res.json({ isSuccess: true});
 });
 
 //상세페이지 이동
