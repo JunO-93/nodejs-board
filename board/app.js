@@ -6,16 +6,22 @@ const app = express();
 const mongodbConnection = require("./configs/mongodb-connection");
 const { ObjectId } = require("mongodb");
 
+
 // req.body와 POST 요청을 해석하기 위한 설정
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //select web templete engine
-app.engine("handlebars", handlebars.create({ //핸들바 생성 및 엔진 반환
+// app.engine("handlebars", handlebars.create({ //핸들바 생성 및 엔진 반환
+//         helpers: require("./configs/handlebars-helper"),
+//     }).engine,
+// );
+app.engine('.hbs', handlebars.create({
         helpers: require("./configs/handlebars-helper"),
-    }).engine,
-);
-app.set("view engine", "handlebars");
+        extname:'.hbs',
+    }).engine
+ );
+app.set("view engine", ".hbs");
 app.set("views", __dirname + "/views"); //뷰디렉터리 설정
 
 //메인화면 리스트페이지
@@ -71,7 +77,7 @@ app.delete("/delete", async (req, res) => {
     try {
         //collection의 deleteONe을 사용해 게시글 하나를 삭제
         const isSuccess = postService.deletePost(collection, id, password);
-        return res.json({ isSuccess: isSuccess});
+        return res.json({ isSuccess: isSuccess });
 
     } catch (err) { //DB 연결이 안되거나 네트워크 연결 불안정일때 처리
         console.error(err);
@@ -122,6 +128,7 @@ app.delete("/delete-comment", async(req, res) => {
         },
         postService.projectionOption, 
     );
+    // const post = postService.deleteComment(collection, id, idx, password);
     
     //데이터가 없으면 isSuccess : false를 주면서 종료
     if(!post) {
