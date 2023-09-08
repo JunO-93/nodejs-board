@@ -1,9 +1,12 @@
 const paginator = require("../utils/paginator");
+const passwordEncryption = require("../utils/passwordEncryptionUtil");
 const { ObjectId } = require("mongodb");
+
 
 //글쓰기
 async function writePost(collection, post) { //글쓰기함수
     post.hits = 0;
+    post.password = passwordEncryption.salted(post.password);
     post.createdDt = new Date().toISOString(); //날짜는 ISO 포맷으로 저장
     return await collection.insertOne(post); //몽고디비에 post를 저장 후 결과 반환
 }
@@ -40,8 +43,8 @@ async function getDetailPost(collection, id){
 }
 
 async function getPostByIdAndPassword(collection, {id, password}) {
-    // findOne() 함수사용
-    return await collection.findOne({_id: ObjectId(id), password: password}, projectionOption );
+    // findOne() 함수사용    
+    return await collection.findOne({_id: ObjectId(id), password: passwordEncryption.salted(password)}, projectionOption );
 }
 
 async function getPostById(collection, id) {
@@ -52,6 +55,7 @@ async function updatePost(collection, id, post) {
     const toUpdatePost = {
         $set: {
             ...post,
+            password : passwordEncryption.salted(post.password), // 수정 시 패스워드 암호화
         },
     };
     return await collection.updateOne({_id: ObjectId(id)}, toUpdatePost);
@@ -59,13 +63,11 @@ async function updatePost(collection, id, post) {
 
 async function deletePost(collection, id, password) {
 
-    const result = await collection.deleteOne({ _id: ObjectId(id), password: password});
+    const result = await collection.deleteOne({ _id: ObjectId(id), password: passwordEncryption.salted(password)});
 
     if (result.deletedCount !==1) {
-        console.log("삭제 실패");
         return false;
     }
-    console.log("삭제 성공");
     return true;
 }
 

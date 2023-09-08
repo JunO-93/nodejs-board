@@ -44,7 +44,7 @@ app.post("/write", async (req, res) => {
 app.get("/modify/:id", async (req, res) => {
     const { id } = req.params.id;
     //getPostById() 함수로 게시글 데이터를 받아옴
-    const post = await postService.getPostById(collection, id);
+    const post = await postService.getPostById(collection, req.params.id);
     console.log(post);
     res.render("write", { title: "테스트 게시판 ", mode: "modify", post});
 });
@@ -66,7 +66,6 @@ app.post("/modify", async (req, res) => {
 });
 
 //게시글 삭제 API
-
 app.delete("/delete", async (req, res) => {
     const { id, password } = req.body;
     try {
